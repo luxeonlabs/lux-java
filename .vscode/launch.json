@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch Game",
+      "request": "launch",
+      "mainClass": "com.remy.iso.DesktopLauncher",
+      "args": "game://sso=remy",
+      "vmArgs": "-XstartOnFirstThread"
+    }
+  ]
+}
