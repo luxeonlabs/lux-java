@@ -1,0 +1,12 @@
+{
+    "com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle": {
+        "default": {
+            "up": "button",
+            "over": "button_hover"
+        },
+        "world": {
+            "up": "world_btn",
+            "over": "world_btn_hover"
+        }
+    }
+}
