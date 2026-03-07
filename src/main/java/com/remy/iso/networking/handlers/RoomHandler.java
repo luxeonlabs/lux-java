@@ -3,11 +3,12 @@ package com.remy.iso.networking.handlers;
 import com.remy.iso.GameMain;
 import com.remy.iso.networking.GameClient;
 import com.remy.iso.networking.Incoming;
-import com.remy.iso.networking.incoming.PlayerMove;
-import com.remy.iso.networking.incoming.PlayerState;
-import com.remy.iso.networking.incoming.RoomData;
-import com.remy.iso.networking.incoming.RoomPlayers;
-import com.remy.iso.networking.incoming.RoomPlayers.RoomPlayer;
+import com.remy.iso.networking.incoming.room.PlayerMove;
+import com.remy.iso.networking.incoming.room.PlayerState;
+import com.remy.iso.networking.incoming.room.RoomData;
+import com.remy.iso.networking.incoming.room.RoomItems;
+import com.remy.iso.networking.incoming.room.RoomPlayers;
+import com.remy.iso.networking.incoming.room.RoomPlayers.RoomPlayer;
 
 public class RoomHandler {
     public RoomHandler() {
@@ -29,6 +30,10 @@ public class RoomHandler {
 
         gc.register(Incoming.PLAYER_STATE, PlayerState::new, d -> {
             GameMain.getInstance().room().setPlayerState(d);
+        });
+
+        gc.register(Incoming.ROOM_ITEMS, RoomItems::new, d -> {
+            GameMain.getInstance().room().setItems(d.items);
         });
     }
 }

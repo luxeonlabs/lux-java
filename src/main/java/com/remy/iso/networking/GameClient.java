@@ -135,11 +135,8 @@ public class GameClient {
 
             PacketHandler<?> handler = handlers.get(packetId);
 
-            System.out.println("incoming " + packetId);
             if (handler != null) {
                 byte[] payloadData = Arrays.copyOfRange(packetData, 2, packetData.length);
-                System.out.println("Packet ID: " + packetId + ", Payload length: " + payloadData.length);
-                System.out.println("Payload hex: " + Arrays.toString(payloadData));
                 Packet typedPacket = handler.factory.create();
                 typedPacket.wrap(payloadData);
                 typedPacket.reset();

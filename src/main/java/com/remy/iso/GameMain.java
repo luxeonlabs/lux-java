@@ -7,7 +7,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.remy.iso.networking.GameClient;
-import com.remy.iso.networking.incoming.RoomData;
+import com.remy.iso.networking.incoming.room.RoomData;
 import com.remy.iso.room.RoomScreen;
 
 import net.mgsx.gltf.loaders.glb.GLBAssetLoader;

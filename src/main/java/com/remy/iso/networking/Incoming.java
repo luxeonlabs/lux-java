@@ -5,7 +5,8 @@ public enum Incoming {
     PLAYER_ADDED(2),
     ROOM_PLAYERS(3),
     PLAYER_MOVEMENT(4),
-    PLAYER_STATE(5);
+    PLAYER_STATE(5),
+    ROOM_ITEMS(6);
 
     private final int id;
 

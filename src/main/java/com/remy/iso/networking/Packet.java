@@ -36,6 +36,14 @@ public class Packet {
         buffer.putInt(value);
     }
 
+    public void writeFloat(float value) {
+        buffer.putFloat(value);
+    }
+
+    public void writeDouble(double value) {
+        buffer.putDouble(value);
+    }
+
     public void writeString(String value) {
         byte[] strBytes = value.getBytes(StandardCharsets.UTF_8);
         writeShort(strBytes.length);
@@ -59,6 +67,18 @@ public class Packet {
     public int readInt() {
         int val = buffer.getInt(readOffset);
         readOffset += 4;
+        return val;
+    }
+
+    public float readFloat() {
+        float val = buffer.getFloat(readOffset);
+        readOffset += 4;
+        return val;
+    }
+
+    public double readDouble() {
+        double val = buffer.getDouble(readOffset);
+        readOffset += 8;
         return val;
     }
 

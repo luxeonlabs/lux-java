@@ -11,16 +11,19 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Vector3;
 import com.remy.iso.GameMain;
 import com.remy.iso.networking.GameClient;
-import com.remy.iso.networking.incoming.PlayerMove;
-import com.remy.iso.networking.incoming.PlayerState;
-import com.remy.iso.networking.incoming.RoomData;
-import com.remy.iso.networking.incoming.RoomPlayers;
+import com.remy.iso.networking.incoming.room.PlayerMove;
+import com.remy.iso.networking.incoming.room.PlayerState;
+import com.remy.iso.networking.incoming.room.RoomData;
+import com.remy.iso.networking.incoming.room.RoomItems.RoomItem;
+import com.remy.iso.networking.incoming.room.RoomPlayers;
 import com.remy.iso.networking.outgoing.RequestMove;
 import com.remy.iso.room.ui.RoomUI;
 
+import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.scene.Scene;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
@@ -29,7 +32,6 @@ import net.mgsx.gltf.scene3d.scene.SceneManager;
 public class RoomScreen implements Screen {
     private SceneManager sceneManager;
     private SceneAsset playerAsset;
-    private Scene playerScene;
     private ModelBatch modelBatch;
     private Environment environment;
     private OrthographicCamera camera;
@@ -43,7 +45,6 @@ public class RoomScreen implements Screen {
     private Scene stairScene;
     private Scene wallScene;
 
-    // Pivot / orbit camera
     private Vector3 pivot;
     private float yaw = 45f;
     private float pitch = 30f;
@@ -55,6 +56,7 @@ public class RoomScreen implements Screen {
     private RoomData data;
 
     private Map<String, RoomAvatar> players = new HashMap<>();
+    private Map<Integer, RoomFurniture> items = new HashMap<>();
 
     public RoomScreen(RoomData data) {
         this.model = data.model;
@@ -81,10 +83,11 @@ public class RoomScreen implements Screen {
         DirectionalShadowLight shadow = new DirectionalShadowLight(2048, 2048);
         shadow.set(Color.WHITE, -2.5f, -7f, -5f);
         shadow.intensity = 1.5f;
+        sceneManager.environment.set(new PBRFloatAttribute(PBRFloatAttribute.ShadowBias, 1f / 256f));
 
         sceneManager.environment.add(shadow);
-
         sceneManager.environment.shadowMap = shadow;
+        sceneManager.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 
         // Generate room
         room = new RoomLayout();
@@ -196,10 +199,6 @@ public class RoomScreen implements Screen {
 
             // --- CLICK LOGIC ---
             if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-                System.out.println("Tile Clicked: [" + selectedGridX + ", " + selectedGridZ + "]");
-                System.out.println("World Center: (" + snappedX + ", " + currentTileY + ", " + snappedZ + ")");
-
-                // Example: Do something with the tile
                 handleTileClick(selectedGridX, selectedGridZ, snappedX, snappedZ);
             }
         }
@@ -284,6 +283,14 @@ public class RoomScreen implements Screen {
             return;
 
         avatar.setState(RoomAvatar.stateFromInt(data.state));
+    }
+
+    public void setItems(RoomItem[] items) {
+        this.items.clear();
+
+        for (RoomItem item : items) {
+            this.items.put(item.id, new RoomFurniture(item, sceneManager));
+        }
     }
 
     @Override

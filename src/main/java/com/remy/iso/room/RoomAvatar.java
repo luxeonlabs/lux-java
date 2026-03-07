@@ -6,9 +6,8 @@ import java.util.Map;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.remy.iso.GameMain;
-import com.remy.iso.networking.incoming.RoomPlayers.RoomPlayer;
+import com.remy.iso.networking.incoming.room.RoomPlayers.RoomPlayer;
 
-import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.scene.Scene;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import net.mgsx.gltf.scene3d.scene.SceneManager;
@@ -47,9 +46,6 @@ public class RoomAvatar {
         this.sceneManager = sm;
         this.scene = new Scene(asset.scene);
         sceneManager.addScene(this.scene);
-
-        this.scene.modelInstance.materials
-                .forEach(mat -> mat.set(PBRFloatAttribute.createMetallic(GameMain.DEMETALLIC)));
 
         setPosition(player.x, player.y, player.z);
         playAnim("idle");
@@ -90,7 +86,7 @@ public class RoomAvatar {
     }
 
     // ── Movement ──────────────────────────────────────────────────────────────
-    public void serverMoveTo(int tileX, int tileZ, int height, int rotationIndex) {
+    public void serverMoveTo(int tileX, int tileZ, float height, int rotationIndex) {
         targetRotationY = rotationIndexToRadians(rotationIndex);
 
         moveStart.set(currentPosition);
@@ -109,7 +105,7 @@ public class RoomAvatar {
         currentPosition.set(pos);
     }
 
-    private Vector3 tileToWorld(int tileX, int tileZ, int height) {
+    private Vector3 tileToWorld(int tileX, int tileZ, float height) {
         return new Vector3(
                 tileX * RoomLayout.TILE_SIZE + RoomLayout.TILE_SIZE / 2f,
                 height * RoomLayout.LEVEL_HEIGHT,
@@ -130,7 +126,7 @@ public class RoomAvatar {
                 playAnim("walk");
                 break;
             case SITTING:
-                playAnim("sit");
+                playAnim("sitting");
                 break;
         }
     }
@@ -165,11 +161,6 @@ public class RoomAvatar {
         if (clothingScene.animationController != null && !currentAnim.isEmpty())
             clothingScene.animationController.animate(currentAnim, -1, 1f, null, 0f);
         syncClothing();
-
-        clothingScene.modelInstance.materials
-                .forEach(mat -> mat.set(PBRFloatAttribute.createMetallic(GameMain.DEMETALLIC)));
-        clothingScene.modelInstance.materials
-                .forEach(mat -> mat.set(PBRFloatAttribute.createRoughness(1f)));
     }
 
     public void removeClothing(String id) {

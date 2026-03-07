@@ -24,7 +24,7 @@ import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 
 public class RoomLayout implements Disposable {
 
-    public static final float TILE_SIZE = 1.5f;
+    public static final float TILE_SIZE = 1.4f;
     public static final float LEVEL_HEIGHT = 1.0f;
     public static final int STAIR_STEPS = 4;
     public static final float FLOOR_DEPTH = LEVEL_HEIGHT / STAIR_STEPS;
@@ -162,7 +162,8 @@ public class RoomLayout implements Disposable {
         buildOuterWalls(wall);
 
         Material wallMat = new Material(PBRColorAttribute.createBaseColorFactor(Color.WHITE));
-        wallMat.set(PBRFloatAttribute.createMetallic(GameMain.DEMETALLIC));
+        wallMat.set(PBRFloatAttribute.createMetallic(0));
+        wallMat.set(PBRFloatAttribute.createRoughness(1f));
         floorModel = floor.build(floorMat);
         stairModel = stair.build(floorMat);
         wallModel = wall.build(wallMat);
@@ -198,7 +199,6 @@ public class RoomLayout implements Disposable {
         if (colourHex != null && !colourHex.isEmpty()) {
             String hex = colourHex.startsWith("#") ? colourHex.substring(1) : colourHex;
             floorMat.set(PBRColorAttribute.createBaseColorFactor(Color.valueOf(hex)));
-            floorMat.remove(ColorAttribute.Specular);
         }
 
         if (texturePath != null && !texturePath.isEmpty()) {
@@ -209,7 +209,8 @@ public class RoomLayout implements Disposable {
             floorMat.set(PBRTextureAttribute.createBaseColorTexture(tex));
         }
 
-        floorMat.set(PBRFloatAttribute.createMetallic(GameMain.DEMETALLIC));
+        floorMat.set(PBRFloatAttribute.createMetallic(0));
+        floorMat.set(PBRFloatAttribute.createRoughness(1));
     }
 
     private void buildFloor(Geo floor, Geo stair) {
