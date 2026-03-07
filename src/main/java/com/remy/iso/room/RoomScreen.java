@@ -49,7 +49,7 @@ public class RoomScreen implements Screen {
     private float yaw = 45f;
     private float pitch = 30f;
     private float distance = 15f;
-    private static final float VIEWPORT_SCALE = 100f;
+    private static float VIEWPORT_SCALE = 0f;
 
     private RoomUI hud;
 
@@ -66,6 +66,9 @@ public class RoomScreen implements Screen {
     @Override
     public void show() {
         sceneManager = new SceneManager(70);
+
+        VIEWPORT_SCALE = 50 * Gdx.graphics.getBackBufferScale();
+        System.out.println(Gdx.graphics.getBackBufferScale());
 
         hud = new RoomUI();
         hud.setInputProcessor();
