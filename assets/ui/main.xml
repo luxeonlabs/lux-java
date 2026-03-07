@@ -1,0 +1,11 @@
+<group fillParent="true" align="bottomRight" x="10" y="10">
+    <ninepatch src="ui/frame/frame.png" left="92" right="92" top="55" bottom="30" width="300"
+        height="50">
+    </ninepatch>
+
+    <table fillParent="true" align="bottomLeft" spacingX="10" padX="10">
+        <imagebutton up="home.png" over="home_hover.png" onClick="onInventory" />
+        <imagebutton up="person.png" over="person_hover.png" onClick="onWorld" />
+        <imagebutton up="home.png" over="home.png" onClick="onWorld" />
+    </table>
+</group>

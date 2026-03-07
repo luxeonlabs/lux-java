@@ -3,6 +3,7 @@ package com.remy.iso.networking.handlers;
 import com.remy.iso.GameMain;
 import com.remy.iso.networking.GameClient;
 import com.remy.iso.networking.Incoming;
+import com.remy.iso.networking.incoming.room.PlayerAdded;
 import com.remy.iso.networking.incoming.room.PlayerMove;
 import com.remy.iso.networking.incoming.room.PlayerState;
 import com.remy.iso.networking.incoming.room.RoomData;
@@ -16,6 +17,10 @@ public class RoomHandler {
 
         gc.register(Incoming.ROOM_DATA, RoomData::new, d -> {
             GameMain.getInstance().loadRoom(d);
+        });
+
+        gc.register(Incoming.PLAYER_ADDED, PlayerAdded::new, d -> {
+            GameMain.getInstance().room().addPlayer(d.player);
         });
 
         gc.register(Incoming.ROOM_PLAYERS, RoomPlayers::new, d -> {

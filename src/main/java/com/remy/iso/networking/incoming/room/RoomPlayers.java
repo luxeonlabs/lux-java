@@ -8,7 +8,7 @@ public class RoomPlayers extends Packet {
     public RoomPlayers() {
     }
 
-    public class RoomPlayer {
+    public static class RoomPlayer {
         public String id;
         public int x;
         public int y;

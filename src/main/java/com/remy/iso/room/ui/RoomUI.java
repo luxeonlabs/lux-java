@@ -1,50 +1,24 @@
 package com.remy.iso.room.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.remy.iso.GameMain;
+import com.remy.iso.ui.XmlUI;
 
 public class RoomUI {
     private final Stage stage;
 
     public RoomUI() {
-        stage = new Stage(new ScreenViewport());
+        ScreenViewport viewport = new ScreenViewport();
+        viewport.setUnitsPerPixel(2f);
 
-        Group avatarContainer = new Group();
+        stage = new Stage(viewport);
 
-        Image avatar = new Image(GameMain.getInstance().assets().get("ui/left/base.png", Texture.class));
-        avatarContainer.addActor(avatar);
-        avatarContainer.setSize(avatar.getWidth(), avatar.getHeight());
-        avatarContainer.setPosition(10, 10);
-
-        Skin skin = new Skin();
-        skin.add("button", new TextureRegion(new Texture("ui/left/button.png")));
-        skin.add("button_hover", new TextureRegion(new Texture("ui/left/hoverbutton.png")));
-        skin.add("world_btn", new TextureRegion(new Texture("ui/left/worldbtn.png")));
-        skin.add("world_btn_hover", new TextureRegion(new Texture("ui/left/worldbtnhover.png")));
-        skin.load(Gdx.files.internal("ui/left/skin.json"));
-
-        ImageButton btn = new ImageButton(skin);
-        btn.setPosition(16, 26);
-
-        ImageButton world = new ImageButton(skin, "world");
-        world.setPosition(90, 11);
-
-        ImageButton worldd = new ImageButton(skin, "world");
-        worldd.setPosition(90 + 66, 32);
-
-        avatarContainer.addActor(btn);
-        avatarContainer.addActor(world);
-        avatarContainer.addActor(worldd);
-
-        stage.addActor(avatarContainer);
+        XmlUI ui = new XmlUI(2f, "ui/left");
+        ui.setActionContainer(this);
+        Actor root = ui.parse("ui/main.xml");
+        stage.addActor(root);
     }
 
     public void setInputProcessor() {
@@ -58,6 +32,10 @@ public class RoomUI {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+    }
+
+    public void onButtonClick() {
+        System.out.println("clicked??");
     }
 
     public void dispose() {
