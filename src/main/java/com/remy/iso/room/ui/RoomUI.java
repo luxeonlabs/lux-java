@@ -41,4 +41,8 @@ public class RoomUI {
     public void dispose() {
         stage.dispose();
     }
+
+    public Stage getStage() {
+        return stage;
+    }
 }

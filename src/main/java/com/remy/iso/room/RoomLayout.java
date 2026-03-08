@@ -162,8 +162,9 @@ public class RoomLayout implements Disposable {
         buildOuterWalls(wall);
 
         Material wallMat = new Material(PBRColorAttribute.createBaseColorFactor(Color.WHITE));
-        wallMat.set(PBRFloatAttribute.createMetallic(0));
-        wallMat.set(PBRFloatAttribute.createRoughness(1f));
+        wallMat.set(PBRFloatAttribute.createMetallic(0.1f));
+        wallMat.set(PBRFloatAttribute.createRoughness(0.5f));
+        wallMat.set(PBRFloatAttribute.createSpecularFactor(0.3f));
         floorModel = floor.build(floorMat);
         stairModel = stair.build(floorMat);
         wallModel = wall.build(wallMat);
@@ -209,8 +210,9 @@ public class RoomLayout implements Disposable {
             floorMat.set(PBRTextureAttribute.createBaseColorTexture(tex));
         }
 
-        floorMat.set(PBRFloatAttribute.createMetallic(0));
-        floorMat.set(PBRFloatAttribute.createRoughness(1));
+        floorMat.set(PBRFloatAttribute.createMetallic(0.1f));
+        floorMat.set(PBRFloatAttribute.createRoughness(0.5f));
+        floorMat.set(PBRFloatAttribute.createSpecularFactor(0.3f));
     }
 
     private void buildFloor(Geo floor, Geo stair) {
