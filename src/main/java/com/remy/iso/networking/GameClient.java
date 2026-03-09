@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
+import com.remy.iso.networking.handlers.AuthHandler;
 import com.remy.iso.networking.handlers.RoomHandler;
-import com.remy.iso.networking.outgoing.AuthToken;
+import com.remy.iso.networking.outgoing.auth.AuthToken;
 
 public class GameClient {
     private static GameClient instance;
@@ -54,6 +55,7 @@ public class GameClient {
 
     public GameClient() {
         instance = this;
+        new AuthHandler();
         new RoomHandler();
     }
 

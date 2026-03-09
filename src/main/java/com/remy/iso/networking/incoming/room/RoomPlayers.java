@@ -10,6 +10,7 @@ public class RoomPlayers extends Packet {
 
     public static class RoomPlayer {
         public String id;
+        public String name;
         public int x;
         public int y;
         public int z;
@@ -19,6 +20,7 @@ public class RoomPlayers extends Packet {
         this.players = readArray(RoomPlayer.class, () -> {
             RoomPlayer player = new RoomPlayer();
             player.id = readString();
+            player.name = readString();
             player.x = readInt();
             player.y = readInt();
             player.z = readInt();

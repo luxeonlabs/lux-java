@@ -25,12 +25,13 @@ public class RoomItems extends Packet {
             item.desc = readString();
             item.colour = readString();
             item.model = readString();
+            item.interaction = readString();
 
             return item;
         });
     }
 
-    public class RoomItem {
+    public static class RoomItem {
         public int id;
         public int x;
         public int y;
@@ -43,5 +44,6 @@ public class RoomItems extends Packet {
         public String desc;
         public String colour;
         public String model;
+        public String interaction;
     }
 }

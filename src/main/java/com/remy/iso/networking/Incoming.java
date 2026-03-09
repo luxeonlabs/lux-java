@@ -6,7 +6,10 @@ public enum Incoming {
     ROOM_PLAYERS(3),
     PLAYER_MOVEMENT(4),
     PLAYER_STATE(5),
-    ROOM_ITEMS(6);
+    ROOM_ITEMS(6),
+    CLIENT_CONFIG(7),
+    UPDATE_ITEM(8),
+    ROOM_CHAT(9);
 
     private final int id;
 

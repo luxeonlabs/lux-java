@@ -1,0 +1,8 @@
+<window bg="ui/frame/frame.png" left="92" right="92" top="55" bottom="30"
+    width="300" height="400" align="top" padLeft="10" padRight="10" x="10" y="100">
+    <table bg="ui/frame/header.png" left="92" right="92" top="55" bottom="30"
+        cellHeight="55" expandX="true" fillX="true" row="true" align="center">
+        <label text="Navigator" cellAlign="center" expand="true" align="center" />
+    </table>
+    <label text=" Content" />
+</window>

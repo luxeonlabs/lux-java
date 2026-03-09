@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
@@ -165,6 +166,7 @@ public class RoomLayout implements Disposable {
         wallMat.set(PBRFloatAttribute.createMetallic(0.1f));
         wallMat.set(PBRFloatAttribute.createRoughness(0.5f));
         wallMat.set(PBRFloatAttribute.createSpecularFactor(0.3f));
+        wallMat.set(new IntAttribute(IntAttribute.CullFace, 0));
         floorModel = floor.build(floorMat);
         stairModel = stair.build(floorMat);
         wallModel = wall.build(wallMat);

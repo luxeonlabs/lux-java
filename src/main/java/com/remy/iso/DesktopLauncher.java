@@ -15,6 +15,8 @@ public class DesktopLauncher {
         config.setTitle("Isometric MMO");
         config.setWindowedMode(1280, 720);
         config.setForegroundFPS(60);
+        config.setIdleFPS(24);
+        config.useVsync(true);
 
         new Lwjgl3Application(new GameMain(ssoToken), config);
     }

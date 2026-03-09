@@ -14,9 +14,12 @@ import org.w3c.dom.NodeList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -27,6 +30,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -95,15 +99,27 @@ public class XmlUI {
 
     private void buildDefaultSkin() {
         skin = new Skin();
-        skin.add("default", new BitmapFont());
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/noto.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter params = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        params.size = (int) (14 * Gdx.graphics.getBackBufferScale());
+        BitmapFont font = generator.generateFont(params);
+        generator.dispose();
+        skin.add("default", font);
 
         Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = skin.getFont("default");
+        labelStyle.font = font;
+        labelStyle.fontColor = com.badlogic.gdx.graphics.Color.WHITE;
         skin.add("default", labelStyle);
 
         TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
-        btnStyle.font = skin.getFont("default");
+        btnStyle.font = font;
         skin.add("default", btnStyle);
+
+        Window.WindowStyle windowStyle = new Window.WindowStyle();
+        windowStyle.titleFont = font;
+        windowStyle.titleFontColor = com.badlogic.gdx.graphics.Color.WHITE;
+        skin.add("default", windowStyle);
     }
 
     public void setActionContainer(Object container) {
@@ -199,6 +215,64 @@ public class XmlUI {
                 return new Image();
             }
 
+            case "inputfield": {
+                String hint = el.getAttribute("hint");
+                TextField.TextFieldStyle style = new TextField.TextFieldStyle();
+                style.font = skin.getFont("default");
+                style.fontColor = com.badlogic.gdx.graphics.Color.WHITE;
+                style.messageFontColor = new com.badlogic.gdx.graphics.Color(1, 1, 1, 0.5f);
+                style.messageFont = skin.getFont("default");
+                String bg = el.getAttribute("bg");
+                if (!bg.isEmpty() && el.hasAttribute("left")) {
+                    int left = Integer.parseInt(el.getAttribute("left"));
+                    int right = Integer.parseInt(el.getAttribute("right"));
+                    int top = Integer.parseInt(el.getAttribute("top"));
+                    int bottom = Integer.parseInt(el.getAttribute("bottom"));
+                    NinePatch patch = new NinePatch(
+                            new Texture(Gdx.files.internal(path(bg))),
+                            left, right, top, bottom);
+                    style.background = new NinePatchDrawable(patch);
+                }
+                Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+                pixmap.setColor(Color.WHITE);
+                pixmap.fill();
+                skin.add("white", new Texture(pixmap));
+                pixmap.dispose();
+                style.cursor = skin.newDrawable("white", com.badlogic.gdx.graphics.Color.WHITE);
+                style.selection = skin.newDrawable("white", new com.badlogic.gdx.graphics.Color(0.5f, 0.5f, 1f, 0.5f));
+
+                String onSubmit = el.getAttribute("onSubmit");
+                if (!onSubmit.isEmpty()) {
+                    TextField textField = new TextField("", style);
+                    textField.setMessageText(hint);
+                    textField.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+                        @Override
+                        public boolean keyDown(com.badlogic.gdx.scenes.scene2d.InputEvent event, int keycode) {
+                            if (keycode == com.badlogic.gdx.Input.Keys.ENTER) {
+                                if (actionContainer == null)
+                                    return false;
+                                try {
+                                    try {
+                                        Method m = actionContainer.getClass().getMethod(onSubmit, String.class,
+                                                TextField.class);
+                                        m.invoke(actionContainer, textField.getText(), textField);
+                                    } catch (NoSuchMethodException e) {
+                                        Method m = actionContainer.getClass().getMethod(onSubmit);
+                                        m.invoke(actionContainer);
+                                    }
+                                } catch (Exception e) {
+                                    Gdx.app.error("XmlUI", "Failed to invoke onSubmit: " + onSubmit, e);
+                                }
+                                return true;
+                            }
+                            return false;
+                        }
+                    });
+                    return textField;
+                }
+                return new TextField(hint, style);
+            }
+
             case "imagebutton": {
                 String up = el.getAttribute("up");
                 String over = el.getAttribute("over");
@@ -221,11 +295,42 @@ public class XmlUI {
                 style.titleFont = skin.getFont("default");
                 style.titleFontColor = com.badlogic.gdx.graphics.Color.WHITE;
                 String bg = el.getAttribute("bg");
-                if (!bg.isEmpty())
-                    style.background = getDrawable(path(bg));
+                if (!bg.isEmpty()) {
+                    if (el.hasAttribute("left")) {
+                        int left = Integer.parseInt(el.getAttribute("left"));
+                        int right = Integer.parseInt(el.getAttribute("right"));
+                        int top = Integer.parseInt(el.getAttribute("top"));
+                        int bottom = Integer.parseInt(el.getAttribute("bottom"));
+                        float bgScale = el.hasAttribute("bgScale") ? Float.parseFloat(el.getAttribute("bgScale")) : 1f;
+                        NinePatch patch = new NinePatch(
+                                new Texture(Gdx.files.internal(path(bg))),
+                                left, right, top, bottom);
+                        patch.scale(bgScale, bgScale);
+                        style.background = new NinePatchDrawable(patch);
+                    } else {
+                        style.background = getDrawable(path(bg));
+                    }
+                }
                 Window window = new Window(title, style);
-                window.setMovable(true);
+                window.setMovable(false);
                 window.setResizable(false);
+                window.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+                    float startX, startY;
+
+                    @Override
+                    public boolean touchDown(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y,
+                            int pointer, int button) {
+                        startX = x;
+                        startY = y;
+                        return true;
+                    }
+
+                    @Override
+                    public void touchDragged(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y,
+                            int pointer) {
+                        window.moveBy(x - startX, y - startY);
+                    }
+                });
                 return window;
             }
 
@@ -272,7 +377,7 @@ public class XmlUI {
                     name.equals("over") || name.equals("down") || name.equals("text") ||
                     name.equals("title") || name.equals("bg") || name.equals("left") ||
                     name.equals("right") || name.equals("top") || name.equals("bottom") ||
-                    name.equals("scale"))
+                    name.equals("scale") || name.equals("bgScale"))
                 continue;
 
             applyAttribute(actor, name, value);
@@ -337,6 +442,20 @@ public class XmlUI {
                 if (actor instanceof Table) {
                     float v = s(Float.parseFloat(value));
                     ((Table) actor).padTop(v).padBottom(v);
+                }
+                break;
+
+            case "touchable":
+                switch (value) {
+                    case "disabled":
+                        actor.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled);
+                        break;
+                    case "childrenOnly":
+                        actor.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly);
+                        break;
+                    default:
+                        actor.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled);
+                        break;
                 }
                 break;
             case "spacing":
@@ -463,6 +582,10 @@ public class XmlUI {
             default:
                 return Align.center;
         }
+    }
+
+    public Skin getSkin() {
+        return skin;
     }
 
     public void dispose() {

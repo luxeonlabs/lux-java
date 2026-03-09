@@ -1,5 +1,10 @@
 package com.remy.iso;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.lwjgl.glfw.GLFW;
+
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
@@ -9,6 +14,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.remy.iso.networking.GameClient;
 import com.remy.iso.networking.incoming.room.RoomData;
 import com.remy.iso.room.RoomScreen;
+import com.remy.iso.ui.AUI;
+import com.remy.iso.ui.NavigatorUI;
+import com.remy.iso.ui.RoomUI;
+import com.remy.iso.utils.ConfigManager;
 
 import net.mgsx.gltf.loaders.glb.GLBAssetLoader;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
@@ -22,7 +31,11 @@ public class GameMain extends Game {
 
     private RoomScreen room;
 
+    private ConfigManager config;
+
     public static float DEMETALLIC = 0.4f;
+
+    private Map<String, AUI> ui = new HashMap<>();
 
     public GameMain() {
     }
@@ -40,12 +53,15 @@ public class GameMain extends Game {
 
     @Override
     public void create() {
+        GLFW.glfwSwapInterval(1);
+
         assets = new AssetManager();
         assets.setLoader(SceneAsset.class, ".glb", new GLBAssetLoader());
         loadAll(assets);
         assets.finishLoading();
 
         batch = new SpriteBatch();
+        config = new ConfigManager();
         client = new GameClient();
 
         try {
@@ -53,6 +69,8 @@ public class GameMain extends Game {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        this.ui.put("navigator", new NavigatorUI());
     }
 
     @Override
@@ -61,13 +79,17 @@ public class GameMain extends Game {
 
         this.client.processCallbacks();
 
-        // persistentUI.act();
-        // persistentUI.draw();
+        float delta = Gdx.graphics.getDeltaTime();
+        for (AUI ui : this.ui.values()) {
+            ui.render(delta);
+        }
     }
 
     public RoomScreen loadRoom(RoomData data) {
         room = new RoomScreen(data);
         setScreen(room);
+
+        this.ui.put("room", new RoomUI());
         return room;
     }
 
@@ -86,6 +108,10 @@ public class GameMain extends Game {
 
     public RoomScreen room() {
         return this.room;
+    }
+
+    public ConfigManager config() {
+        return this.config;
     }
 
     public static void loadAll(AssetManager assets) {
@@ -112,4 +138,15 @@ public class GameMain extends Game {
         }
     }
 
+    public Map<String, AUI> getUI() {
+        return this.ui;
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        for (AUI ui : this.ui.values()) {
+            ui.resize(width, height);
+        }
+    }
 }

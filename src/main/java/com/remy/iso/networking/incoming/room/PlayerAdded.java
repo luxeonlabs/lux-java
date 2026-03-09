@@ -14,9 +14,8 @@ public class PlayerAdded extends Packet {
     public void parse() {
         this.player = new RoomPlayer();
         player.id = readString();
+        player.name = readString();
         player.x = readInt();
         player.y = readInt();
-        // player.z = readFloat();
-        // this.rotation = readInt();
     }
 }

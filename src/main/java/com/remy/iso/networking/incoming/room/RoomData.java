@@ -6,6 +6,7 @@ public class RoomData extends Packet {
 
     public String floor;
     public String wall;
+    public String door;
     public String[] model;
 
     public RoomData() {
@@ -14,6 +15,7 @@ public class RoomData extends Packet {
     public void parse() {
         this.floor = readString();
         this.wall = readString();
+        this.door = readString();
 
         this.model = readArray(String.class, () -> readString());
     }

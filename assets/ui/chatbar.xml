@@ -1,0 +1,7 @@
+<table fillParent="true" align="bottom" expandX="true" y="10" touchable="childrenOnly">
+    <table bg="ui/frame/header.png" left="92" right="92" top="55" bottom="30" cellWidth="300"
+        cellHeight="45" align="center" padTop="0" padBottom="0" padRight="10" padLeft="10">
+        <inputfield hint="Say something..." expandX="true" fillX="true" cellAlign="center"
+            onSubmit="onChat" />
+    </table>
+</table>

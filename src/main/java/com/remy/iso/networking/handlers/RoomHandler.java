@@ -6,10 +6,12 @@ import com.remy.iso.networking.Incoming;
 import com.remy.iso.networking.incoming.room.PlayerAdded;
 import com.remy.iso.networking.incoming.room.PlayerMove;
 import com.remy.iso.networking.incoming.room.PlayerState;
+import com.remy.iso.networking.incoming.room.RoomChat;
 import com.remy.iso.networking.incoming.room.RoomData;
 import com.remy.iso.networking.incoming.room.RoomItems;
 import com.remy.iso.networking.incoming.room.RoomPlayers;
 import com.remy.iso.networking.incoming.room.RoomPlayers.RoomPlayer;
+import com.remy.iso.networking.incoming.room.UpdateItem;
 
 public class RoomHandler {
     public RoomHandler() {
@@ -39,6 +41,14 @@ public class RoomHandler {
 
         gc.register(Incoming.ROOM_ITEMS, RoomItems::new, d -> {
             GameMain.getInstance().room().setItems(d.items);
+        });
+
+        gc.register(Incoming.UPDATE_ITEM, UpdateItem::new, d -> {
+            GameMain.getInstance().room().updateItem(d.item);
+        });
+
+        gc.register(Incoming.ROOM_CHAT, RoomChat::new, d -> {
+            GameMain.getInstance().room().onChat(d);
         });
     }
 }

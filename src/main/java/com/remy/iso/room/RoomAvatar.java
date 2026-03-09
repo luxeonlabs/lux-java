@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import com.remy.iso.GameMain;
 import com.remy.iso.networking.incoming.room.RoomPlayers.RoomPlayer;
 
 import net.mgsx.gltf.scene3d.scene.Scene;
@@ -23,6 +22,8 @@ public class RoomAvatar {
 
     public Scene scene;
     private SceneManager sceneManager;
+
+    public RoomPlayer player;
 
     // Movement
     private Vector3 moveStart = new Vector3();
@@ -47,11 +48,10 @@ public class RoomAvatar {
         this.scene = new Scene(asset.scene);
         sceneManager.addScene(this.scene);
 
+        this.player = player;
+
         setPosition(player.x, player.y, player.z);
         playAnim("idle");
-
-        setClothing("shirt",
-                GameMain.getInstance().assets().get("avatar/clothing/shirts/shirt1.glb", SceneAsset.class));
     }
 
     // ── Update (call from RoomScreen.render) ──────────────────────────────────
@@ -183,6 +183,15 @@ public class RoomAvatar {
     private float lerpAngle(float from, float to, float t) {
         float diff = ((to - from + MathUtils.PI) % MathUtils.PI2) - MathUtils.PI;
         return from + diff * Math.min(t, 1f);
+    }
+
+    public void say(String message) {
+        // chatMessage = message;
+        // chatTimer = 5f; // show for 5 seconds
+    }
+
+    public Vector3 pos() {
+        return scene.modelInstance.transform.getTranslation(new Vector3());
     }
 
     public void dispose() {

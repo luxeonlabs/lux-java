@@ -6,7 +6,6 @@ import java.util.Map;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -16,17 +15,21 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
 import com.remy.iso.GameMain;
 import com.remy.iso.networking.GameClient;
 import com.remy.iso.networking.incoming.room.PlayerMove;
 import com.remy.iso.networking.incoming.room.PlayerState;
+import com.remy.iso.networking.incoming.room.RoomChat;
 import com.remy.iso.networking.incoming.room.RoomData;
 import com.remy.iso.networking.incoming.room.RoomItems.RoomItem;
 import com.remy.iso.networking.incoming.room.RoomPlayers;
-import com.remy.iso.networking.outgoing.RequestMove;
-import com.remy.iso.room.ui.RoomUI;
+import com.remy.iso.networking.outgoing.room.RequestInteract;
+import com.remy.iso.networking.outgoing.room.RequestMove;
+import com.remy.iso.ui.AUI;
+import com.remy.iso.ui.RoomUI;
+import com.remy.iso.utils.AssetLoader;
 
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
@@ -59,12 +62,6 @@ public class RoomScreen implements Screen {
     // Pan state
     private boolean isPanning = false;
     private final Vector3 panStart = new Vector3();
-
-    // Zoom limits
-    private static final float MIN_ZOOM = 0.3f;
-    private static final float MAX_ZOOM = 3.0f;
-
-    private RoomUI hud;
     private RoomData data;
 
     private Map<String, RoomAvatar> players = new HashMap<>();
@@ -89,24 +86,28 @@ public class RoomScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         VIEWPORT_SCALE = 50 * Gdx.graphics.getBackBufferScale();
-
-        hud = new RoomUI();
-
-        // Input multiplexer — UI first, then game input
-        InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(hud.getStage());
-        multiplexer.addProcessor(new InputAdapter() {
+        Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean scrolled(float amountX, float amountY) {
-                camera.zoom = MathUtils.clamp(camera.zoom + amountY * 0.1f, MIN_ZOOM, MAX_ZOOM);
+                VIEWPORT_SCALE = MathUtils.clamp(VIEWPORT_SCALE - amountY * 2f, 20f, 150f);
+                float w = Gdx.graphics.getBackBufferWidth();
+                float h = Gdx.graphics.getBackBufferHeight();
+                camera.viewportWidth = w / VIEWPORT_SCALE;
+                camera.viewportHeight = h / VIEWPORT_SCALE;
+                camera.update();
                 return true;
             }
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                // Forward to UI first
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible && ui.stage.touchDown(screenX, screenY, pointer, button))
+                        return true;
+                }
+
                 if (button == Input.Buttons.RIGHT) {
                     isPanning = true;
-                    // Unproject click onto the floor plane (y=0)
                     com.badlogic.gdx.math.collision.Ray ray = camera.getPickRay(screenX, screenY);
                     if (Math.abs(ray.direction.y) > 0.0001f) {
                         float t = -ray.origin.y / ray.direction.y;
@@ -122,6 +123,10 @@ public class RoomScreen implements Screen {
 
             @Override
             public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible)
+                        ui.stage.touchUp(screenX, screenY, pointer, button);
+                }
                 if (button == Input.Buttons.RIGHT) {
                     isPanning = false;
                     return true;
@@ -131,10 +136,14 @@ public class RoomScreen implements Screen {
 
             @Override
             public boolean touchDragged(int screenX, int screenY, int pointer) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible)
+                        ui.stage.touchDragged(screenX, screenY, pointer);
+                }
+
                 if (!isPanning)
                     return false;
 
-                // Unproject current mouse onto the floor plane (y=0)
                 com.badlogic.gdx.math.collision.Ray ray = camera.getPickRay(screenX, screenY);
                 if (Math.abs(ray.direction.y) < 0.0001f)
                     return false;
@@ -145,21 +154,59 @@ public class RoomScreen implements Screen {
                         0,
                         ray.origin.z + ray.direction.z * t);
 
-                // Move pivot so the grabbed world point stays under the mouse
                 pivot.x -= panCurrent.x - panStart.x;
                 pivot.z -= panCurrent.z - panStart.z;
                 updateCamera();
                 return true;
             }
-        });
-        Gdx.input.setInputProcessor(multiplexer);
 
-        avatarAsset = GameMain.getInstance().assets().get("avatar/character.glb", SceneAsset.class);
+            @Override
+            public boolean mouseMoved(int screenX, int screenY) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible)
+                        ui.stage.mouseMoved(screenX, screenY);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean keyDown(int keycode) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible && ui.stage.keyDown(keycode))
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public boolean keyUp(int keycode) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible && ui.stage.keyUp(keycode))
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public boolean keyTyped(char character) {
+                for (AUI ui : GameMain.getInstance().getUI().values()) {
+                    if (ui.visible && ui.stage.keyTyped(character))
+                        return true;
+                }
+                return false;
+            }
+
+        });
+
+        AssetLoader.getInstance().loadModel("avatar/character.glb", asset -> {
+            avatarAsset = asset;
+            System.out.println("ready");
+        });
 
         float w = Gdx.graphics.getBackBufferWidth();
         float h = Gdx.graphics.getBackBufferHeight();
         camera = new OrthographicCamera(w / VIEWPORT_SCALE, h / VIEWPORT_SCALE);
-        camera.near = 0.1f;
+        camera.near = -300f;
         camera.far = 300f;
         sceneManager.setCamera(camera);
 
@@ -167,7 +214,7 @@ public class RoomScreen implements Screen {
         DirectionalShadowLight shadow = new DirectionalShadowLight(2048, 2048);
         shadow.set(Color.WHITE, -2.5f, -7f, -5f);
         shadow.intensity = 0.2f;
-        sceneManager.environment.set(new PBRFloatAttribute(PBRFloatAttribute.ShadowBias, 1f / 2048f));
+        sceneManager.environment.set(new PBRFloatAttribute(PBRFloatAttribute.ShadowBias, 1f / 512f));
         sceneManager.environment.add(shadow);
         sceneManager.environment.shadowMap = shadow;
         sceneManager.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0f, 0f, 0f, 1f));
@@ -231,20 +278,35 @@ public class RoomScreen implements Screen {
         }
         modelBatch.end();
 
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.RED);
-        for (RoomFurniture furniture : items.values()) {
-            BoundingBox bounds = new BoundingBox();
-            furniture.scene.modelInstance.calculateBoundingBox(bounds);
-            bounds.mul(furniture.scene.modelInstance.transform);
-            Vector3 min = bounds.min;
-            Vector3 max = bounds.max;
-            shapeRenderer.box(min.x, min.y, max.z, max.x - min.x, max.y - min.y, max.z - min.z);
-        }
-        shapeRenderer.end();
+        // shapeRenderer.setProjectionMatrix(camera.combined);
+        // shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        // // shapeRenderer.setColor(Color.RED);
+        // // for (RoomFurniture furniture : items.values()) {
+        // // BoundingBox bounds = new BoundingBox();
+        // // furniture.scene.modelInstance.calculateBoundingBox(bounds);
+        // // bounds.mul(furniture.scene.modelInstance.transform);
+        // // Vector3 min = bounds.min;
+        // // Vector3 max = bounds.max;
+        // // shapeRenderer.box(min.x, min.y, max.z, max.x - min.x, max.y - min.y, max.z
+        // -
+        // // min.z);
+        // // }
+        // shapeRenderer.end();
+    }
 
-        hud.render(delta);
+    private boolean isHoveringUI() {
+        for (AUI ui : GameMain.getInstance().getUI().values()) {
+            if (!ui.visible)
+                continue;
+            Vector2 stageCoords = ui.stage.screenToStageCoordinates(
+                    new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+            com.badlogic.gdx.scenes.scene2d.Actor hit = ui.stage.hit(stageCoords.x, stageCoords.y, true);
+            if (hit == null)
+                continue;
+            if (hit.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
+                return true;
+        }
+        return false;
     }
 
     private void trackMouse() {
@@ -253,6 +315,11 @@ public class RoomScreen implements Screen {
         float minT = Float.MAX_VALUE;
         int selectedGridX = -1;
         int selectedGridZ = -1;
+
+        if (isHoveringUI()) {
+            room.updateMarkerPosition(0, -9999f, 0);
+            return;
+        }
 
         for (int z = 0; z < room.rows; z++) {
             for (int x = 0; x < room.cols; x++) {
@@ -304,6 +371,7 @@ public class RoomScreen implements Screen {
                 if (clicked.id == lastClickedItemId && now - lastClickTime < DOUBLE_CLICK_MS) {
                     // Double click — interact
                     System.out.println("interact?" + lastClickedItemId);
+                    GameClient.getInstance().send(new RequestInteract(lastClickedItemId));
                     lastClickedItemId = -1;
                 } else {
                     // Single click on furniture — still move to that tile
@@ -325,11 +393,11 @@ public class RoomScreen implements Screen {
         boolean changed = false;
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            yaw -= 1f;
+            yaw -= 2f;
             changed = true;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            yaw += 1f;
+            yaw += 2f;
             changed = true;
         }
 
@@ -397,6 +465,30 @@ public class RoomScreen implements Screen {
         return id == -1 ? null : items.get(id);
     }
 
+    public void updateItem(RoomItem item) {
+        RoomFurniture furni = this.items.get(item.id);
+        if (furni == null)
+            return;
+        furni.serverUpdate(item);
+    }
+
+    public void onChat(RoomChat chat) {
+        RoomAvatar avatar = players.get(chat.userId);
+        if (avatar == null)
+            return;
+        RoomUI ui = (RoomUI) GameMain.getInstance().getUI().get("room");
+
+        Vector3 pos = avatar.pos();
+        Vector2 screenPos = GameMain.getInstance().room().worldToScreen(pos);
+
+        ui.chat.addMessage(avatar.player.name, chat.msg, screenPos.x);
+    }
+
+    public Vector2 worldToScreen(Vector3 worldPos) {
+        Vector3 projected = camera.project(worldPos.cpy());
+        return new Vector2(projected.x, Gdx.graphics.getHeight() - projected.y);
+    }
+
     @Override
     public void resize(int width, int height) {
         float w = Gdx.graphics.getBackBufferWidth();
@@ -404,7 +496,6 @@ public class RoomScreen implements Screen {
         camera.viewportWidth = w / VIEWPORT_SCALE;
         camera.viewportHeight = h / VIEWPORT_SCALE;
         camera.update();
-        hud.resize(width, height);
         picker.resize((int) Gdx.graphics.getBackBufferWidth(), (int) Gdx.graphics.getBackBufferHeight());
     }
 

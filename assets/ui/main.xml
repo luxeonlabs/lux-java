@@ -4,7 +4,7 @@
     </ninepatch>
 
     <table fillParent="true" align="bottomLeft" spacingX="10" padX="10">
-        <imagebutton up="home.png" over="home_hover.png" onClick="onInventory" />
+        <imagebutton up="home.png" over="home_hover.png" onClick="onNavigator" />
         <imagebutton up="person.png" over="person_hover.png" onClick="onWorld" />
         <imagebutton up="home.png" over="home.png" onClick="onWorld" />
     </table>

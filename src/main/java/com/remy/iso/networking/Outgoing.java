@@ -2,7 +2,10 @@ package com.remy.iso.networking;
 
 public enum Outgoing {
     AuthToken(1),
-    REQUEST_MOVE(2);
+    CLIENT_READY(2),
+    REQUEST_MOVE(3),
+    ITEM_INTERACT(4),
+    SEND_CHAT(5);
 
     private final int id;
 
